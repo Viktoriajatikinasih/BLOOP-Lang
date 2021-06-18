@@ -2,106 +2,39 @@
 # IMPORTS
 #######################################
 
-from strings_with_arrows import *
+from sly import Lexer
 
 
-TT_INT       = 'INT'
-TT_FLOAT    = 'FLOAT'
-TT_PLUS     = 'TAMBAH'
-TT_MINUS    = 'KURANG'
-TT_MUL      = 'KALI'
-TT_DIV      = 'BAGI'
-TT_POW      = 'POW'
-TT_LPAREN   = 'KIKURUNG'
-TT_RPAREN   = 'KAKURUNG'
-TT_EOF      = 'EOF'
+class BasicLexer(Lexer):
+    tokens = {NAME, NUMBER, STRING, IF, THEN,
+              ELSE, FOR, FUN, TO, ARROW, EQEQ, PRINT}
+    ignore = '\t '
 
-class Token:
-    def __init__(self, tipe_, value=None, posisi_awal=None, posisi_akhir=None):
-        self.tipe = tipe_
-        self.value = value
+    literals = {'=', '+', '-', '/', '*', '(', ')', ',', ';'}
 
-        if posisi_awal:
-            self.posisi_awal = posisi_awal.salin()
-            self.posisi_akhir = posisi_awal.salin()
-            self.posisi_akhir.maju()
+    # Mendefinisikan token
+    IF = r'MENAWI'
+    THEN = r'DADOS'
+    ELSE = r'LIYANE'
+    FOR = r'KAGEM'
+    FUN = r'FUNGSI'
+    TO = r'KE'
+    PRINT = r'CETAK'
+    ARROW = r'->'
+    NAME = r'[A-Za-z_][a-zA-Z0-9_]*'
+    STRING = r'\".*?\"'
 
-        if posisi_akhir:
-            self.posisi_akhir = posisi_akhir
+    EQEQ = r'=='
+
+    @_(r'\d+')
+    def NUMBER(self, t):
+        t.value = int(t.value)
+        return t
+
+    ignore_comment = r'\#.*'
+    ignore_newline = r'\n+'
+
+    def error (self, t) :
+        print ("illegal character '%s'" % t.value[0])
+        self.index += 1
     
-    def __repr__(self):
-        if self.value: return f'{self.tipe}:{self.value}'
-        return f'{self.tipe}'
-
-#######################################
-# LEXER
-#######################################
-
-class Lexer:
-    def __init__(self, nama_file, teks):
-        self.nama_file = nama_file
-        self.teks = teks
-        self.posisi = Position(-1, 0, -1, nama_file, teks)
-        self.current_char = None
-        self.maju()
-    
-    def maju(self):
-        self.posisi.maju(self.current_char)
-        self.current_char = self.teks[self.posisi.idx] if self.posisi.idx < len(self.teks) else None
-
-    def buatTokens(self):
-        tokens = []
-
-        while self.current_char != None:
-            if self.current_char in ' \t':
-                self.maju()
-            elif self.current_char in DIGITS:
-                tokens.append(self.buatNomor())
-            elif self.current_char == '+':
-                tokens.append(Token(TT_TAMBAH, posisi_awal=self.posisi))
-                self.maju()
-            elif self.current_char == '-':
-                tokens.append(Token(TT_KURANG, posisi_awal=self.posisi))
-                self.maju()
-            elif self.current_char == '*':
-                tokens.append(Token(TT_KALI, posisi_awal=self.posisi))
-                self.maju()
-            elif self.current_char == '/':
-                tokens.append(Token(TT_BAGI, posisi_awal=self.posisi))
-                self.maju()
-            elif self.current_char == '^':
-                tokens.append(Token(TT_POW, posisi_awal=self.posisi))
-                self.maju()
-            elif self.current_char == '(':
-                tokens.append(Token(TT_KIKURUNG, posisi_awal=self.posisi))
-                self.maju()
-            elif self.current_char == ')':
-                tokens.append(Token(TT_KAKURUNG, posisi_awal=self.posisi))
-                self.maju()
-            else:
-                posisi_awal = self.posisi.salin()
-                char = self.current_char
-                self.maju()
-                return [], IllegalCharError(posisi_awal, self.posisi, "'" + char + "'")
-
-        tokens.append(Token(TT_EOF, posisi_awal=self.pos))
-        return tokens, None
-
-    def buatNomor(self):
-        angkaString = ''
-        jumlahAngka = 0
-        posisi_awal = self.posisi.salin()
-
-        while self.current_char != None and self.current_char in DIGITS + '.':
-            if self.current_char == '.':
-                if jumlahAngka == 1: break
-                jumlahAngka += 1
-                angkaString += '.'
-            else:
-                angkaString += self.current_char
-            self.maju()
-
-        if jumlahAngka == 0:
-            return Token(TT_INT, int(angkaString), posisi_awal, self.posisi)
-        else:
-            return Token(TT_FLOAT, float(angkaString), posisi_awal, self.posisi)
