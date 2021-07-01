@@ -33,8 +33,30 @@ class BasicLexer(Lexer):
 
     ignore_comment = r'\#.*'
     ignore_newline = r'\n+'
+    
+     class BasicParser(Parser):
+        tokens = BasicLexer.tokens
+
+        precedence = (
+            ('left', '+', '-'), 
+            ('left', '*', '/'),
+            ('right', 'UMINUS')
+        )
 
     def error (self, t) :
         print ("illegal character '%s'" % t.value[0])
         self.index += 1
+        
+    if __name__ == '__main__':
+        lexer = BasicLexer()
+        env   = {}
+        while True:
+            try:
+                text = input('basic > ')
+            except EOFError:
+                break
+            if text:
+                lex = lexer.tokenize(text)
+                for token in lex:
+                    print(token)
     
