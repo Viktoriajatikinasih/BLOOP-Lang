@@ -34,15 +34,7 @@ class BasicLexer(Lexer):
     ignore_comment = r'\#.*'
     ignore_newline = r'\n+'
     
-     class BasicParser(Parser):
-        tokens = BasicLexer.tokens
-
-        precedence = (
-            ('left', '+', '-'), 
-            ('left', '*', '/'),
-            ('right', 'UMINUS')
-        )
-
+     
     def error (self, t) :
         print ("illegal character '%s'" % t.value[0])
         self.index += 1
