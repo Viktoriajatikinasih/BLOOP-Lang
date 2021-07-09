@@ -3,7 +3,17 @@
 #######################################
 
 from sly import Parser
-class Parser:
+from src.blooplexer import BasicLexer
+
+class BasicParser(Parser):
+        tokens = BasicLexer.tokens
+
+        precedence = (
+            ('left', '+', '-'), 
+            ('left', '*', '/'),
+            ('right', 'UMINUS')
+        )
+	
 	def __init__(self, tokens):
 		self.tokens = tokens
 		self.tok_idx = -1
