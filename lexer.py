@@ -31,13 +31,8 @@ class BasicLexer(Lexer):
         t.value = int(t.value)
         return t
 
-    @_(r'#.*')
-    def COMMENT(self, t):
-        pass
-
-    @_(r'\n+')
-    def newline(self, t):
-        self.lineno = t.value.count('\n')
+   ignore_comment = r'\#.*'
+   ignore_newline = r'\n+'
     
      
     def error (self, t) :
