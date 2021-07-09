@@ -1,57 +1,106 @@
-#######################################
-# INTERPRETER
-#######################################
+import re
 
-class Interpreter:
-	def visit(self, node, context):
-		method_name = f'visit_{tipe(node).__name__}'
-		method = getattr(self, method_name, self.no_visit_method)
-		return method(node, context)
 
-	def no_visit_method(self, node, context):
-		raise Exception(f'No visit_{type(node).__name__} method defined')
+class BasicExecute:
 
-	###################################
+    def __init__(self, tree, env):
+        self.env = env
+        result = self.walkTree(tree)
+        if result is not None and isinstance(result, int):
+            print(result)
+        if isinstance(result, str) and result[0] == '"':
+            print(result)
 
-	def visit_NumberNode(self, node, context):
-		return RTResult().success(
-			Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
-		)
+    def walkTree(self, node):
 
-	def visit_BinOpNode(self, node, context):
-		res = RTResult()
-		left = res.register(self.visit(node.left_node, context))
-		if res.error: return res
-		right = res.register(self.visit(node.right_node, context))
-		if res.error: return res
+        def removeQuote(text):
+            if type(text) is str:
+                text = text[1:-1]
+                print(text)
+            return text
 
-		if node.op_tok.type == TT_TAMBAH:
-			result, error = left.added_to(right)
-		elif node.op_tok.type == TT_KURANG:
-			result, error = left.subbed_by(right)
-		elif node.op_tok.type == TT_KALI:
-			result, error = left.multed_by(right)
-		elif node.op_tok.type == TT_BAGI:
-			result, error = left.dived_by(right)
-		elif node.op_tok.type == TT_POW:
-			result, error = left.powed_by(right)
+        if isinstance(node, int):
+            return node
+        if isinstance(node, str):
+            return node
 
-		if error:
-			return res.failure(error)
-		else:
-			return res.success(result.set_pos(node.pos_start, node.pos_end))
+        if node is None:
+            return None
 
-	def visit_UnaryOpNode(self, node, context):
-		res = RTResult()
-		number = res.register(self.visit(node.node, context))
-		if res.error: return res
+        if node[0] == 'program':
+            if node[1] == None:
+                self.walkTree(node[2])
+            else:
+                self.walkTree(node[1])
+                self.walkTree(node[2])
 
-		error = None
+        if node[0] == 'num':
+            return node[1]
 
-		if node.op_tok.type == TT_KURANG:
-			number, error = number.multed_by(Number(-1))
+        if node[0] == 'str':
+            return node[1]
 
-		if error:
-			return res.failure(error)
-		else:
-			return res.success(number.set_posisi(node.posisi_awal, node.posisi_akhir))
+        if node[0] == 'if_stmt':
+            result = self.walkTree(node[1])
+            if result:
+                return self.walkTree(node[2][1])
+            return self.walkTree(node[2][2])
+
+        if node[0] == 'condition_eqeq':
+            return self.walkTree(node[1]) == self.walkTree(node[2])
+
+        if node[0] == 'condition_lweq':
+            return self.walkTree(node[1]) == self.walkTree(node[2])
+
+        if node[0] == 'condition_greq':
+            return self.walkTree(node[1]) == self.walkTree(node[2])
+
+        if node[0] == 'fun_def':
+            self.env[node[1]] = node[2]
+
+        if node[0] == 'fun_call':
+            try:
+                return self.walkTree(self.env[node[1]])
+            except LookupError:
+                print("Undefined function '%s'" % node[1])
+                return 0
+
+        if node[0] == 'add':
+            return self.walkTree(node[1]) + self.walkTree(node[2])
+        elif node[0] == 'sub':
+            return self.walkTree(node[1]) - self.walkTree(node[2])
+        elif node[0] == 'mul':
+            return self.walkTree(node[1]) * self.walkTree(node[2])
+        elif node[0] == 'div':
+            return int(self.walkTree(node[1]) / self.walkTree(node[2]))
+
+        if node[0] == 'print':
+            return removeQuote(self.walkTree(node[1]))
+
+        if node[0] == 'var_assign':
+            self.env[node[1]] = self.walkTree(node[2])
+            return node[1]
+
+        if node[0] == 'var':
+            try:
+                return self.env[node[1]]
+            except LookupError:
+                print("Undefined variable '"+node[1]+"' found!")
+                return 0
+
+        if node[0] == 'for_loop':
+            if node[1][0] == 'for_loop_setup':
+                loop_setup = self.walkTree(node[1])
+
+                loop_count = self.env[loop_setup[0]]
+                loop_limit = loop_setup[1]
+
+                for i in range(loop_count+1, loop_limit+1):
+                    res = self.walkTree(node[2])
+                    if res is not None:
+                        print(res)
+                    self.env[loop_setup[0]] = i
+                del self.env[loop_setup[0]]
+
+        if node[0] == 'for_loop_setup':
+            return (self.walkTree(node[1]), self.walkTree(node[2]))
