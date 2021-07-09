@@ -40,7 +40,7 @@ class BasicParser(Parser):
 		res = ParseResult()
 		tok = self.current_tok
 
-		if tok.type in (TT_INT, TT_FLOAT):
+		if tok.type in (TT_FLOAT, TT_INT):
 			res.register(self.advance())
 			return res.success(NumberNode(tok))
 
