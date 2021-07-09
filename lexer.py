@@ -13,13 +13,13 @@ class BasicLexer(Lexer):
     literals = {'=', '+', '-', '/', '*', '(', ')', ',', ';'}
 
     # Mendefinisikan token
-    IF = r'MENAWI'
-    THEN = r'DADOS'
-    ELSE = r'LIYANE'
-    FOR = r'KAGEM'
-    FUN = r'FUNGSI'
-    TO = r'ING'
-    PRINT = r'NYITHAK'
+     IF = r'IDZA'
+    THEN = r'IDZAN'
+    ELSE = r'AKHAR'
+    FOR = r'LI'
+    FUN = r'WAZIFA'
+    TO = r'ILA'
+    PRINT = r'TOBAA'
     ARROW = r'->'
     NAME = r'[A-Za-z_][a-zA-Z0-9_]*'
     STRING = r'\".*?\"'
