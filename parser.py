@@ -14,90 +14,81 @@ class BasicParser(Parser):
             ('right', 'UMINUS')
         )
 	
-	def __init__(self, tokens):
-		self.tokens = tokens
-		self.tok_idx = -1
-		self.advance()
+	def __init__(self);
+	self.env = {}
+	
+	@_('')
+	def statement(self, p);
+	pass
 
-	def advance(self, ):
-		self.tok_idx += 1
-		if self.tok_idx < len(self.tokens):
-			self.current_tok = self.tokens[self.tok_idx]
-		return self.current_tok
+	@_('FOR var_assign TO expr THEN statement')
+	def statement(self, p):
+        return ('for_loop', ('for_loop_setup', p.var_assign, p.expr), p.statement)
 
-	def parse(self):
-		res = self.expr()
-		if not res.error and self.current_tok.type != TT_EOF:
-			return res.failure(InvalidSyntaxError(
-				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected '+', '-', '*' or '/'"
-			))
-		return res
+    @_('IF condition THEN statement ELSE statement')
+    def statement(self, p):
+        return ('if_stmt', p.condition, ('branch', p.statement0, p.statement1))
 
-	###################################
+    @_('FUN NAME "(" ")" ARROW statement')
+    def statement(self, p):
+        return ('fun_def', p.NAME, p.statement)
 
-	def atom(self):
-		res = ParseResult()
-		tok = self.current_tok
+    @_('NAME "(" ")"')
+    def statement(self, p):
+        return ('fun_call', p.NAME)
 
-		if tok.type in (TT_FLOAT, TT_INT):
-			res.register(self.advance())
-			return res.success(NumberNode(tok))
+    @_('expr EQEQ expr')
+    def condition(self, p):
+        return ('condition_eqeq', p.expr0, p.expr1)
 
-		elif tok.type == TT_LPAREN:
-			res.register(self.advance())
-			expr = res.register(self.expr())
-			if res.error: return res
-			if self.current_tok.type == TT_RPAREN:
-				res.register(self.advance())
-				return res.success(expr)
-			else:
-				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					"Expected ')'"
-				))
+    @_('PRINT expr')
+    def statement(self, p):
+        return ('print', p.expr)
 
-		return res.failure(InvalidSyntaxError(
-			tok.pos_start, tok.pos_end,
-			"Expected int, float, '+', '-' or '('"
-		))
+    @_('PRINT STRING')
+    def statement(self, p):
+        return ('print', p.STRING)
 
-	def power(self):
-		return self.bin_op(self.atom, (TT_POW, ), self.factor)
+    @_('var_assign')
+    def statement(self, p):
+        return p.var_assign
 
-	def factor(self):
-		res = ParseResult()
-		tok = self.current_tok
+    @_('NAME "=" expr')
+    def var_assign(self, p):
+        return ('var_assign', p.NAME, p.expr)
 
-		if tok.type in (TT_PLUS, TT_MINUS):
-			res.register(self.advance())
-			factor = res.register(self.factor())
-			if res.error: return res
-			return res.success(UnaryOpNode(tok, factor))
+    @_('NAME "=" STRING')
+    def var_assign(self, p):
+        return ('var_assign', p.NAME, p.STRING)
 
-		return self.power()
+    @_('expr')
+    def statement(self, p):
+        return (p.expr)
 
-	def term(self):
-		return self.bin_op(self.factor, (TT_MUL, TT_DIV))
+    @_('expr "+" expr')
+    def expr(self, p):
+        return ('add', p.expr0, p.expr1)
 
-	def expr(self):
-		return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
+    @_('expr "-" expr')
+    def expr(self, p):
+        return ('sub', p.expr0, p.expr1)
 
-	###################################
+    @_('expr "*" expr')
+    def expr(self, p):
+        return ('mul', p.expr0, p.expr1)
 
-	def bin_op(self, func_a, ops, func_b=None):
-		if func_b == None:
-			func_b = func_a
-		
-		res = ParseResult()
-		left = res.register(func_a())
-		if res.error: return res
+    @_('expr "/" expr')
+    def expr(self, p):
+        return ('div', p.expr0, p.expr1)
 
-		while self.current_tok.type in ops:
-			op_tok = self.current_tok
-			res.register(self.advance())
-			right = res.register(func_b())
-			if res.error: return res
-			left = BinOpNode(left, op_tok, right)
+    @_('"-" expr %prec UMINUS')
+    def expr(self, p):
+        return p.expr
 
-		return res.success(left)
+    @_('NAME')
+    def expr(self, p):
+        return ('var', p.NAME)
+
+    @_('NUMBER')
+    def expr(self, p):
+        return ('num', p.NUMBER)
