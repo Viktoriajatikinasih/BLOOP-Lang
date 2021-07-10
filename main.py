@@ -24,7 +24,7 @@ if __name__ == '__main__':
     else:
         while True:
             try:
-                text = input('liyn_language » ')
+                text = input('bloop -> ')
             except EOFError:
                 break
             if text:
