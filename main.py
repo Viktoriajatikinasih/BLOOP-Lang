@@ -1,6 +1,6 @@
-from src.lexer import BasicLexer
-from src.parser import BasicParser
-from src.interpreter import BasicExecute
+from src.lexer import BloopLexer
+from src.parser import BloopParser
+from src.interpreter import BloopExecute
 from sys import *
 
 
@@ -10,8 +10,8 @@ def open_file(filename):
 
 
 if __name__ == '__main__':
-    lexer = BasicLexer()
-    parser = BasicParser()
+    lexer = BloopLexer()
+    parser = BloopParser()
     #interpreter = basicinterpreter
     env = {}
     if len(argv) > 1:
@@ -20,7 +20,7 @@ if __name__ == '__main__':
         for line in text:
             #lex = lexer.tokenize(line)
             tree = parser.parse(lexer.tokenize(line))
-            BasicExecute(tree, env)
+            BloopExecute(tree, env)
     else:
         while True:
             try:
@@ -29,4 +29,4 @@ if __name__ == '__main__':
                 break
             if text:
                 tree = parser.parse(lexer.tokenize(text))
-                BasicExecute(tree, env)
+                BloopExecute(tree, env)
